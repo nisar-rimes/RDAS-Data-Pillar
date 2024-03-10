@@ -9,4 +9,3 @@ quiz_model.Base.metadata.create_all(bind=engine)
 
 
 app.include_router(quiz_main.router)
-# ...
