@@ -1,0 +1,32 @@
+https://www.youtube.com/watch?v=398DuQbQJq0
+1) Create folder 
+	C:\RDAS-Data-Pillar
+2) create virtual environment
+	python -m venv env
+3) Activate the virtual environment 
+   	Cmd : “env\Scripts\activate.bat”
+4) INstall all the dependencies for the project
+	pip install fastapi 
+	pip install uvicorn 
+        pip install sqlalchemy 
+	pip install psycopg2-binary 
+,psycopg2
+
+	or psycopg2-binary 
+
+
+
+
+RDAS-Data-Pillar/
+|-- main.py
+|-- database/
+|   `-- engine.py
+|-- quiz/
+|   |-- __init__.py
+|   |-- models.py
+|   `-- main.py
+`-- ...
+
+
+
+
