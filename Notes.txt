@@ -5,14 +5,25 @@ https://www.youtube.com/watch?v=398DuQbQJq0
 	python -m venv env
 3) Activate the virtual environment 
    	Cmd : “env\Scripts\activate.bat”
-4) INstall all the dependencies for the project
+4) Install all the dependencies for the project
 	pip install fastapi 
 	pip install uvicorn 
         pip install sqlalchemy 
 	pip install psycopg2-binary 
 ,psycopg2
 
-	or psycopg2-binary 
+	or psycopg2-binary
+      pip install netCDF4
+      pip uninstall netCDF4
+
+uvicorn main:app --reload
+
+conda install netcdf4
+environment location: C:\Users\pc\miniconda3
+
+
+
+ 
 
 
 
@@ -28,6 +39,41 @@ RDAS-Data-Pillar/
 `-- ...
 
 NISAR
+
+time ::
+
+class 'netCDF4._netCDF4.Variable'>
+float64 TIME(TIME)
+    units: days since 1900-12-31
+    axis: T
+    calendar: GREGORIAN
+    time_origin: 31-DEC-1900
+    standard_name: time
+unlimited dimensions: TIME
+current shape = (365,)
+filling on, default _FillValue of 9.969209968386869e+36 used
+
+#rainfall ::
+
+<class 'netCDF4._netCDF4.Variable'>
+float64 RAINFALL(TIME, LATITUDE, LONGITUDE)
+    missing_value: -999.0
+    _FillValue: -999.0
+    long_name: Rainfall
+    units: mm
+    history: From ind2023_rfp25.grd
+unlimited dimensions: TIME
+current shape = (365, 129, 135)
+filling on
+
+
+
+
+
+
+
+
+
 
 
 
