@@ -1,0 +1,10 @@
+
+public.rainfall_data
+(
+    id integer NOT NULL DEFAULT nextval('rainfall_data_id_seq'::regclass),
+    date timestamp without time zone,
+    longitude double precision,
+    latitude double precision,
+    rainfall double precision,
+    CONSTRAINT rainfall_data_pkey PRIMARY KEY (id)
+)
