@@ -17,8 +17,8 @@ from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION
 
 
 
-class rainfall_data(Base):
-    __tablename__ = 'rainfall_data'
+class Rainfalldata(Base):
+    __tablename__ = 'rainfalldata'
     id = Column (Integer , primary_key =True, index=True)
     date= Column(TIMESTAMP , index=True)
     longitude= Column(DOUBLE_PRECISION, index=True)

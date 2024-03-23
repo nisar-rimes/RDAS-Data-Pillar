@@ -14,7 +14,7 @@ from datetime import datetime
 #         choices:List[ChoiceBase]
 
 # Pydantic model 
-class rainfall_dataBase(BaseModel):
+class RainfallDataBase(BaseModel):
         id: Optional[int]
         date: datetime
         longitude: float

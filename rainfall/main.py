@@ -1,14 +1,16 @@
-from fastapi import FastAPI, HTTPException, Depends, status, Response, APIRouter
+from fastapi import FastAPI, HTTPException, Depends, status, Response, APIRouter, UploadFile, File
 import netCDF4 as nc
 from typing import List
-#import psycopg2
-import numpy as np  # Import NumPy for handling masked arrays
+import numpy as np
 from datetime import datetime, timedelta 
+import os
+from fastapi.encoders import jsonable_encoder
 
-from . import models,schemas
+
+from . import models, schemas
 from dependencies import get_db 
-router= APIRouter()
 
+router = APIRouter()
 
 # Define function to convert NetCDF time to datetime
 def convert_time(nc_time, time_origin_str):
@@ -19,68 +21,73 @@ def convert_time(nc_time, time_origin_str):
     # Return the sum of time origin and timedelta
     return time_origin + time_delta
 
-
 db_dependency = Depends(get_db)
 
-@router.get("/rainfall/import-data")
-async def import_data(db= db_dependency):
+@router.post("/rainfall/import-data")
+async def import_data(file: UploadFile = File(...), db= db_dependency):
     try:
+
+        
+        # Read the contents of the uploaded file
+        contents = await file.read()
+
+        # Define the directory to store the uploaded files
+        current_directory = os.path.dirname(os.path.abspath(__file__))
+        temp_folder_path = os.path.join(current_directory, 'temp')
+    
+        # Ensure that the directory exists
+        os.makedirs(temp_folder_path, exist_ok=True)
+        
+        # Save the file to the upload directory
+        file_path = os.path.join(temp_folder_path, file.filename)
+        with open(file_path, "wb") as temp_file:
+            temp_file.write(contents)
+
         # Open the NetCDF file
-        #nc_file = "RF25_ind2023_rfp25.nc"
-        data = nc.Dataset("C:\\RDAS-Data-Pillar\\RF25_ind2023_rfp25.nc")
+        data = nc.Dataset(file_path)
 
         # Extract variables
         longitude = data.variables['LONGITUDE'][:]
         latitude = data.variables['LATITUDE'][:]
-        time_var = data.variables['TIME']
-        rainfall = data.variables['RAINFALL']
+        time_var = data.variables['TIME'][:]
+        rainfall = data.variables['RAINFALL'][:]
 
         time_origin_str = data.variables["TIME"].time_origin
 
-        # Create a cursor object
-        #cur = conn.cursor()
-        #print("task started ")
+        batch_size = 1000  # Batch size for database insertion
 
         # Loop through time, latitude, and longitude to extract data and insert into the database
+        count = 0
+    
         for t_idx in range(len(time_var)):
             for lat_idx in range(len(latitude)):
                 for lon_idx in range(len(longitude)):
-                    date = convert_time(time_var[t_idx], time_origin_str)
-                    rainfall_value = float(rainfall[t_idx, lat_idx, lon_idx].data)  # Convert masked array to regular NumPy array
-                    if rainfall_value != -999.0:  # Exclude missing values
-
-
-                        # cur.execute("""INSERT INTO rainfall_data (date, longitude, latitude, rainfall) VALUES (%s, %s, %s, %s)""", 
-                        #             (date, float(longitude[lon_idx]), float(latitude[lat_idx]), rainfall_value))
-                        
-
-                        db_rainfall_data = models.rainfall_data(
-                            date=date,
-                            longitude= float(longitude[lon_idx]),
-                            latitude=  float(latitude[lat_idx]),
-                            rainfall= rainfall_value )
-
-                        db.add(db_rainfall_data)
+                    date_nc = convert_time(time_var[t_idx], time_origin_str)
+                    rainfall_value = rainfall[t_idx, lat_idx, lon_idx]
+            
+                    if rainfall_value != -999.0:
+                        db_obj = models.Rainfalldata(date=date_nc, longitude=lon_idx, latitude=lat_idx, rainfall=rainfall_value)
+                        db.add(db_obj)
                         db.commit()
-                        #db.refresh(db_rainfall_data)
+                
+                        count += 1
+                
+                        # if count == batch_size:
+                        #     data.close()
+                        #     count = 0  # Reset batch data counter
+                        #     break  # Break out of the loop if batch size is reached
+                            
+                        # else:  # Innermost loop completed without breaking
+                        #  continue  # Continue to the next iteration of the middle loop
+           
 
 
-                     
-       # Close the NetCDF file
         data.close()
-        # Close cursor and connection
-        # cur.close()
-        # conn.close()
-        print("task completed ")
-        return {"message": "Data imported successfully"}
+
+        print("Task completed ")
+        
+        return {"message": "Data imported successfully:: " + str(count)}
     except Exception as e:
+        # Rollback the transaction in case of an exception
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-
-
-
-
-
-
-
-
-
