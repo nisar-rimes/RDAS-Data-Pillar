@@ -23,11 +23,20 @@ def convert_time(nc_time, time_origin_str):
 
 db_dependency = Depends(get_db)
 
+import os
+import netCDF4 as nc
+from fastapi import HTTPException, File, UploadFile
+from fastapi import APIRouter
+
+router = APIRouter()
+
 @router.post("/rainfall/import-data")
 async def import_data(file: UploadFile = File(...), db= db_dependency):
     try:
+        # Check if the file has .nc extension
+        if not file.filename.endswith('.nc'):
+            raise HTTPException(status_code=400, detail="Only files with .nc extension are allowed.")
 
-        
         # Read the contents of the uploaded file
         contents = await file.read()
 
@@ -54,7 +63,7 @@ async def import_data(file: UploadFile = File(...), db= db_dependency):
 
         time_origin_str = data.variables["TIME"].time_origin
 
-        batch_size = 1000  # Batch size for database insertion
+        #batch_size = 1000  # Batch size for database insertion
 
         # Loop through time, latitude, and longitude to extract data and insert into the database
         count = 0
@@ -71,16 +80,6 @@ async def import_data(file: UploadFile = File(...), db= db_dependency):
                         db.commit()
                 
                         count += 1
-                
-                        # if count == batch_size:
-                        #     data.close()
-                        #     count = 0  # Reset batch data counter
-                        #     break  # Break out of the loop if batch size is reached
-                            
-                        # else:  # Innermost loop completed without breaking
-                        #  continue  # Continue to the next iteration of the middle loop
-           
-
 
         data.close()
 
@@ -91,3 +90,4 @@ async def import_data(file: UploadFile = File(...), db= db_dependency):
         # Rollback the transaction in case of an exception
         db.rollback()
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
