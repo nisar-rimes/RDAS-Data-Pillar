@@ -18,6 +18,8 @@ https://www.youtube.com/watch?v=398DuQbQJq0
 
 env\Scripts\activate.bat
 uvicorn main:app --reload
+-- onserver run this 
+uvicorn main:app --reload --port 8001 
 
 conda install netcdf4
 environment location: C:\Users\pc\miniconda3
@@ -31,7 +33,7 @@ environment location: C:\Users\pc\miniconda3
 
 RDAS-Data-Pillar/
 |-- main.py
-|-- database/
+|-- database/u
 |   `-- engine.py
 |-- quiz/
 |   |-- __init__.py

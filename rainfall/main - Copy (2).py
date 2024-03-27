@@ -5,7 +5,6 @@ import numpy as np
 from datetime import datetime, timedelta 
 import os
 from fastapi.encoders import jsonable_encoder
-import time
 
 
 from . import models, schemas
@@ -32,19 +31,13 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
-
-async def process_batch(batch_data: List[models.Rainfalldata],db= db_dependency):
-    db.add_all(batch_data)
-    db.commit()
-    db.close()
-
 @router.post("/rainfall/import-data")
 async def import_data(file: UploadFile = File(...), db= db_dependency):
     try:
-        start_time = time.time()  # Start time of the script
-
         if not file.filename.endswith('.nc'):
             raise HTTPException(status_code=400, detail="Only files with .nc extension are allowed.")
+
+        contents = await file.read()
 
         current_directory = os.path.dirname(os.path.abspath(__file__))
         temp_folder_path = os.path.join(current_directory, 'temp')
@@ -52,9 +45,7 @@ async def import_data(file: UploadFile = File(...), db= db_dependency):
         
         file_path = os.path.join(temp_folder_path, file.filename)
         with open(file_path, "wb") as temp_file:
-            chunk_size = 1024  # You can adjust the chunk size as needed
-            while chunk := await file.read(chunk_size):
-                temp_file.write(chunk)
+            temp_file.write(contents)
 
         data = nc.Dataset(file_path)
         longitude = data.variables['LONGITUDE'][:]
@@ -63,6 +54,7 @@ async def import_data(file: UploadFile = File(...), db= db_dependency):
         rainfall = data.variables['RAINFALL'][:]
         time_origin_str = data.variables["TIME"].time_origin
 
+        count = 0
         batch_size = 1000
         batch_data = []
 
@@ -74,23 +66,23 @@ async def import_data(file: UploadFile = File(...), db= db_dependency):
                     if rainfall_value != -999.0:
                         db_obj = models.Rainfalldata(date=date_nc, longitude=longitude[lon_idx], latitude=latitude[lat_idx], rainfall=rainfall_value)
                         batch_data.append(db_obj)
+                        count += 1
 
                         if len(batch_data) >= batch_size:
-                            await process_batch(batch_data, db)
+                            db.add_all(batch_data)
+                            db.commit()
                             batch_data = []
 
         if batch_data:
-            await process_batch(batch_data, db)
+            db.add_all(batch_data)
+            db.commit()
 
         data.close()
         print("Task completed ")
         
-        end_time = time.time()  # End time of the script
-        execution_time = end_time - start_time
-        print(f"Script execution time: {execution_time} seconds")
-
-        return {"message": f"Data imported successfully time took in seconds = {execution_time} "}
+        return {"message": "Data imported successfully:: " + str(count)}
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
