@@ -178,4 +178,32 @@ async def get_average_rainfall_by_date(db= db_dependency):
         return formatted_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+    
+
+@router.get("/rainfall/monthly-average/{year}")
+# /rainfall/monthly-average/2023
+async def get_monthly_average_rainfall(year: int, db= db_dependency):
+    try:
+        # Query the database to calculate average monthly rainfall for the specified year
+        monthly_average_rainfall_data = db.query(
+            func.date_trunc('month', models.Rainfalldata.date).label("month"),
+            func.avg(models.Rainfalldata.rainfall).label("average_rainfall")
+        ).filter(
+            func.extract('year', models.Rainfalldata.date) == year
+        ).group_by(func.date_trunc('month', models.Rainfalldata.date)).order_by("month").all()
+
+        if not monthly_average_rainfall_data:
+            raise HTTPException(status_code=404, detail=f"No data found for the year {year}.")
+
+        # Format data to return
+        formatted_data = []
+        for month, average_rainfall in monthly_average_rainfall_data:
+            formatted_data.append({
+                "month": month.strftime("%Y-%m"),
+                "average_rainfall": average_rainfall
+            })
+
+        return formatted_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
