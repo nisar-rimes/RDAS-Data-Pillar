@@ -96,7 +96,7 @@ async def import_data(file: UploadFile = File(...), db= db_dependency):
 
 @router.get("/rainfall/get_data_by_lat_long_range")
 async def get_rainfall_data(lat_range: tuple = Query(...), lon_range: tuple = Query(...),  db= db_dependency):
-        #http://127.0.0.1:8000/rainfall/get_data_by_lat_long_range?lat_range=33.5&lat_range=34.5&lon_range=72.7&lon_range=73.3
+        #http://127.0.0.1:8000/rainfall/get_data_by_lat_long_range?lat_range=33.5&lat_range=34.5&lon_range=72.7&lon_range=73.3 
         try:
             # Validate latitude and longitude ranges
             if len(lat_range) != 2 or len(lon_range) != 2:
@@ -126,6 +126,7 @@ async def get_rainfall_data(lat_range: tuple = Query(...), lon_range: tuple = Qu
             return formatted_data
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+        
     
 
 
