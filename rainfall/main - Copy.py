@@ -71,6 +71,7 @@ async def import_data(db= db_dependency):
         # Close cursor and connection
         # cur.close()
         # conn.close()
+        count  =models.query(func.count(RainfallData.id)).scalar()
         print("task completed ")
         return {"message": "Data imported successfully"}
     except Exception as e:
