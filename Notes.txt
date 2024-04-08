@@ -27,15 +27,7 @@ environment location: C:\Users\pc\miniconda3
 
 
 
-#RDAS-Data-Pillar already exists and you want to update it with the latest changes from the GitHub repository,
 
-cd /home/peter/RDAS-Data-Pillar
-git pull origin main
-
-or 
-git stash
-git pull origin main
-git stash pop
 
 
 
