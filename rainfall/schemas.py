@@ -20,3 +20,14 @@ class RainfallDataBase(BaseModel):
         longitude: float
         latitude: float
         rainfall: float
+
+class WeatherData(BaseModel):
+    country: str
+    region_name: str
+    region_type: str
+    temperature: float
+    rainfall: float
+    wind_speed: float
+    date: datetime
+    duration_mins: int
+    data_source: str

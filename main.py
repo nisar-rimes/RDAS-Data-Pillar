@@ -4,8 +4,26 @@ from quiz   import main as quiz_main
 from quiz   import models as quiz_model
 from rainfall   import main as rainfall_main
 # import quiz.main  
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+
+origins = [
+    "http://localhost",
+    "http://localhost:8000",  # Example: React development server
+    # Add other origins as needed
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    # allow_origins=origins,
+    allow_origins=["*"],  # Allow requests from any origin
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
+
 quiz_model.Base.metadata.create_all(bind=engine)
 
 
