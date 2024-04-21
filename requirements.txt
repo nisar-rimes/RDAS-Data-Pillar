@@ -6,7 +6,8 @@ pydantic
 numpy
 psycopg2-binary
 requests
-geopy shapely
+
 geopy
 pandas
 openpyxl
+
