@@ -143,7 +143,7 @@ async def get_rainfall_daily_grouped_by_year_month(
                 region_name,
                 EXTRACT(year FROM date) AS year,
                 EXTRACT(month FROM date) AS month,
-                SUM(rainfall) AS rainfall,
+                AUM(rainfall) AS rainfall,
                 AVG(temperature) AS avg_temperature,
                 AVG(wind_speed) AS avg_wind_speed
                 
@@ -260,19 +260,15 @@ def execute_query(query):
     conn.close()
     return result
 
-@router.get("/rainfall/weather_data_daily",response_model=list)
-
+@router.get("/rainfall/weather_data_daily", response_model=list)
 def get_weather_data(
     country: Optional[str] = Query(None),
     region_name: Optional[str] = Query(None),
     region_type: Optional[str] = Query(None),
-    # temperature: Optional[float] = Query(None),
-    # rainfall: Optional[float] = Query(None),
-    # wind_speed: Optional[float] = Query(None),
+    # temperature: Optional[float] = Query(None),rainfall: Optional[float] = Query(None), wind_speed: Optional[float] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
-    # duration_mins: Optional[int] = Query(None),
-    # data_source: Optional[str] = Query(None)
+    # duration_mins: Optional[int] = Query(None), data_source: Optional[str] = Query(None)
 ):
     # Build the SQL query based on provided parameters
     sql_query = "SELECT * FROM rainfall_daily_data WHERE TRUE"
@@ -295,23 +291,13 @@ def get_weather_data(
     #     sql_query += f" AND duration_mins = {duration_mins}"
     # if data_source:
     #     sql_query += f" AND data_source = '{data_source}'"
-
     # Execute the SQL query
     result = execute_query(sql_query)
     result_list = []
     for row in result:
-        result_list.append({
-            "country": row[0],
-            "region_name": row[1],
-            "region_type": row[2],
-            "temperature": row[3],
-            "rainfall": row[4],
-            "wind_speed": row[5],
-            "date": row[6],
-            "duration_mins": row[7], 
-            "data_source": row[8]
+        result_list.append({"country": row[0], "region_name": row[1],"region_type": row[2],"temperature": row[3], "rainfall": row[4],"wind_speed": row[5],
+            "date": row[6], "duration_mins": row[7], "data_source": row[8]
         })
-
     return result_list
 
 
@@ -329,73 +315,166 @@ def get_weather_data(
     duration_mins: Optional[int] = Query(None),
     data_source: Optional[str] = Query(None)
 ):
-    # Build the SQL query for region_name1
-    sql_query1 = f"SELECT * FROM rainfall_daily_data WHERE region_type = '{region_type}' AND region_name = '{region_name1}'"
-
-    # Build the SQL query for region_name2
-    sql_query2 = f"SELECT * FROM rainfall_daily_data WHERE region_type = '{region_type}' AND region_name = '{region_name2}'"
-
-    # Append additional filters based on provided parameters
-    if country:
-        sql_query1 += f" AND country = '{country}'"
-        sql_query2 += f" AND country = '{country}'"
-    # if temperature is not None:
-    #     sql_query1 += f" AND temperature = {temperature}"
-    #     sql_query2 += f" AND temperature = {temperature}"
-    # if rainfall is not None:
-    #     sql_query1 += f" AND rainfall = {rainfall}"
-    #     sql_query2 += f" AND rainfall = {rainfall}"
-    # if wind_speed is not None:
-    #     sql_query1 += f" AND wind_speed = {wind_speed}"
-    #     sql_query2 += f" AND wind_speed = {wind_speed}"
-    if start_date and end_date:
-        sql_query1 += f" AND date >= '{start_date}' AND date <= '{end_date}'"
-        sql_query2 += f" AND date >= '{start_date}' AND date <= '{end_date}'"
-    if duration_mins is not None:
-        sql_query1 += f" AND duration_mins = {duration_mins}"
-        sql_query2 += f" AND duration_mins = {duration_mins}"
-    if data_source:
-        sql_query1 += f" AND data_source = '{data_source}'"
-        sql_query2 += f" AND data_source = '{data_source}'"
-
-       # Add ORDER BY clause to both queries
-    sql_query1 += " ORDER BY date"
-    sql_query2 += " ORDER BY date" 
-
-    # Execute the SQL queries
-    result1 = execute_query(sql_query1)
-    result2 = execute_query(sql_query2)
     
-    # Convert the results to lists of dictionaries  schemas.WeatherData
-    result_list1 = []
-    for row in result1:
-        result_list1.append(schemas.WeatherData(
-            country=row[0],
-            region_name=row[1],
-            region_type=row[2],
-            temperature=row[3],
-            rainfall=row[4],
-            wind_speed=row[5],
-            date=row[6],
-            duration_mins=row[7],
-            data_source=row[8]
-        ))
-    
-    result_list2 = []
-    for row in result2:
-        result_list2.append(schemas.WeatherData(
-            country=row[0],
-            region_name=row[1],
-            region_type=row[2],
-            temperature=row[3],
-            rainfall=row[4],
-            wind_speed=row[5],
-            date=row[6],
-            duration_mins=row[7],
-            data_source=row[8]
-        ))
+    try:
+        # Build the SQL query for region_name1
+        sql_query1 = f"SELECT * FROM rainfall_daily_data WHERE region_type = '{region_type}' AND region_name = '{region_name1}'"
 
-    return {"result1": result_list1, "result2": result_list2}
+        # Build the SQL query for region_name2
+        sql_query2 = f"SELECT * FROM rainfall_daily_data WHERE region_type = '{region_type}' AND region_name = '{region_name2}'"
+
+        # Append additional filters based on provided parameters
+        if country:
+            sql_query1 += f" AND country = '{country}'"
+            sql_query2 += f" AND country = '{country}'"
+        # if temperature is not None:
+        #     sql_query1 += f" AND temperature = {temperature}"
+        #     sql_query2 += f" AND temperature = {temperature}"
+        # if rainfall is not None:
+        #     sql_query1 += f" AND rainfall = {rainfall}"
+        #     sql_query2 += f" AND rainfall = {rainfall}"
+        # if wind_speed is not None:
+        #     sql_query1 += f" AND wind_speed = {wind_speed}"
+        #     sql_query2 += f" AND wind_speed = {wind_speed}"
+        if start_date and end_date:
+            sql_query1 += f" AND date >= '{start_date}' AND date <= '{end_date}'"
+            sql_query2 += f" AND date >= '{start_date}' AND date <= '{end_date}'"
+        if duration_mins is not None:
+            sql_query1 += f" AND duration_mins = {duration_mins}"
+            sql_query2 += f" AND duration_mins = {duration_mins}"
+        if data_source:
+            sql_query1 += f" AND data_source = '{data_source}'"
+            sql_query2 += f" AND data_source = '{data_source}'"
+
+        # Add ORDER BY clause to both queries
+        sql_query1 += " ORDER BY date"
+        sql_query2 += " ORDER BY date" 
+
+        # Execute the SQL queries
+        result1 = execute_query(sql_query1)
+        result2 = execute_query(sql_query2)
+        
+        # Convert the results to lists of dictionaries  schemas.WeatherData
+        result_list1 = []
+        for row in result1:
+            result_list1.append(schemas.WeatherData(
+                country=row[0],
+                region_name=row[1],
+                region_type=row[2],
+                temperature=row[3],
+                rainfall=row[4],
+                wind_speed=row[5],
+                date=row[6],
+                duration_mins=row[7],
+                data_source=row[8]
+            ))
+        
+        result_list2 = []
+        for row in result2:
+            result_list2.append(schemas.WeatherData(
+                country=row[0],
+                region_name=row[1],
+                region_type=row[2],
+                temperature=row[3],
+                rainfall=row[4],
+                wind_speed=row[5],
+                date=row[6],
+                duration_mins=row[7],
+                data_source=row[8]
+            ))
+
+        return {"result1": result_list1, "result2": result_list2}
+    except Exception as e:
+            raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+
+
+
+
+
+
+
+
+@router.get("/rainfall/weather_data_grouped", response_model=dict)
+def get_weather_data_grouped(
+    region_name: Optional[str] = Query(None),
+    country: Optional[str] = Query(None),
+    month: bool = Query(False),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None)
+):
+    try:
+        # Base SQL query
+        sql_query = "SELECT EXTRACT(YEAR FROM date) AS year"
+        if month:
+            sql_query += ", EXTRACT(MONTH FROM date) AS month"
+        if region_name:
+            sql_query += ", region_name"
+        if country:
+            sql_query += ", country"
+        
+        sql_query += ", AVG(rainfall) AS avg_rainfall, AVG(temperature) AS avg_temperature, AVG(wind_speed) AS avg_wind_speed FROM rainfall_daily_data"  
+
+        # Append additional filters based on provided parameters
+        where_clause = []
+        if country:
+            where_clause.append(f"country = '{country}'")
+        if start_date and end_date:
+            where_clause.append(f"date BETWEEN '{start_date}' AND '{end_date}'")
+        elif start_date:
+            where_clause.append(f"date >= '{start_date}'")
+        elif end_date:
+            where_clause.append(f"date <= '{end_date}'")
+        if region_name:
+            where_clause.append(f"region_name = '{region_name}'")
+
+        if where_clause:
+            sql_query += " WHERE " + " AND ".join(where_clause)
+
+        # Group by year, month, and region_name
+        group_by_clause = ["EXTRACT(YEAR FROM date)"]
+        if month:
+            group_by_clause.append("EXTRACT(MONTH FROM date)")
+        if region_name:
+            group_by_clause.append("region_name")
+        if country:
+            group_by_clause.append("country")
+        sql_query += f" GROUP BY {', '.join(group_by_clause)} ORDER BY year"
+        
+        # Execute the SQL query
+        result = execute_query(sql_query)
+
+        # Check if the result set is empty
+        if not result:
+            return {"grouped_weather_data": []}
+
+        # Convert the result to a list of dictionaries
+        result_list = []
+        for row in result:
+            result_dict = {}
+            column_index = 0  # Initialize the column index
+            if month:
+                result_dict["month"] = int(row[column_index])
+                column_index += 1
+            result_dict["year"] = int(row[column_index])
+            column_index += 1
+            if region_name:
+                result_dict["region_name"] = row[column_index]
+                column_index += 1
+            if country:
+                result_dict["country"] = row[column_index]
+                column_index += 1
+            result_dict["avg_rainfall"] = float(row[column_index])
+            result_dict["avg_temperature"] = float(row[column_index + 1])
+            result_dict["avg_wind_speed"] = float(row[column_index + 2])
+
+            result_list.append(result_dict)
+
+        return {"grouped_weather_data": result_list}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
         
 
 

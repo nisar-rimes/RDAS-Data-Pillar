@@ -19,7 +19,8 @@ https://www.youtube.com/watch?v=398DuQbQJq0
 env\Scripts\activate.bat
 uvicorn main:app --reload
 -- onserver run this 
-uvicorn main:app --reload --port 8001 
+uvicorn main:app --reload --port 8001
+uvicorn main:app --reload --port 8000 
 
 conda install netcdf4
 environment location: C:\Users\pc\miniconda3
