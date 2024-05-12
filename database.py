@@ -16,4 +16,3 @@ connection_params = {
     "host": "localhost",
     "port": "5432"
 }
-

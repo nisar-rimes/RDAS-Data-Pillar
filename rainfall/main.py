@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, UploadFile, File, HTTPException,Depends, APIRouter, Query
 import pandas as pd
 from sqlalchemy import create_engine
@@ -7,16 +8,19 @@ from . import models, schemas
 from io import BytesIO
 import psycopg2
 from typing import Optional
-import json
+import requests
+from pydantic import BaseModel
+from typing import List
+from commen_methods import get_month_name
+
+
+
+
+
 
 
 
 router = APIRouter()
-
-
-
-
-
 
 
 db_dependency = Depends(get_db)
@@ -265,10 +269,9 @@ def get_weather_data(
     country: Optional[str] = Query(None),
     region_name: Optional[str] = Query(None),
     region_type: Optional[str] = Query(None),
-    # temperature: Optional[float] = Query(None),rainfall: Optional[float] = Query(None), wind_speed: Optional[float] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
-    # duration_mins: Optional[int] = Query(None), data_source: Optional[str] = Query(None)
+
 ):
     # Build the SQL query based on provided parameters
     sql_query = "SELECT * FROM rainfall_daily_data WHERE TRUE"
@@ -279,18 +282,9 @@ def get_weather_data(
         sql_query += f" AND region_name = '{region_name}'"
     if region_type:
         sql_query += f" AND region_type = '{region_type}'"
-    # if temperature is not None:
-    #     sql_query += f" AND temperature = {temperature}"
-    # if rainfall is not None:
-    #     sql_query += f" AND rainfall = {rainfall}"
-    # if wind_speed is not None:
-    #     sql_query += f" AND wind_speed = {wind_speed}"
+   
     if start_date and end_date:
         sql_query += f" AND date >= '{start_date}' AND date <= '{end_date}'"
-    # if duration_mins is not None:
-    #     sql_query += f" AND duration_mins = {duration_mins}"
-    # if data_source:
-    #     sql_query += f" AND data_source = '{data_source}'"
     # Execute the SQL query
     result = execute_query(sql_query)
     result_list = []
@@ -536,6 +530,58 @@ def get_weather_data_daily_comparison_grouped(
         return {"result1": result_list1, "result2": result_list2}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+    
+
+
+
+class DataRequest(BaseModel):
+    source: str
+    indic: str
+    period: str
+    country: str
+    district: List[str]
+    start_date: str
+    end_date: str
+    cache: bool
+
+class DataResponse(BaseModel):
+    metadata: dict
+    data: List[dict]
+
+class Date(BaseModel):
+    day: int
+    month: dict
+    year: int
+
+@router.post("/data/get", response_model=DataResponse)
+async def get_data(request: DataRequest):
+    url = "https://api.rdas.live/data/get"
+    payload = request.dict()
+    
+    response = requests.post(url, json=payload)
+    
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail="Failed to fetch data")
+    
+    data = response.json()
+    
+    # Process data to separate date and month into separate objects
+    for entry in data['data']:
+        date_parts = entry.pop('date').split('-')
+        entry['date'] = Date(
+            day=int(date_parts[2]),
+            month={
+                'number': int(date_parts[1]),
+                'name': {
+                    'short': date_parts[1],
+                    'full': get_month_name(date_parts[1])
+                }
+            },
+            year=int(date_parts[0])
+        ).dict()
+
+    return data
+
 
 
 
