@@ -587,6 +587,55 @@ async def get_data(request: DataRequest):
 
 
 
+@router.post("/data/get_district_comparison", response_model=DataResponse)
+async def get_data(request: DataRequest):
+    if len(request.district) < 2:
+        raise HTTPException(status_code=400, detail="The district list must contain at least two districts.")
+    
+    url = "https://api.rdas.live/data/get"
+    all_data = []
+    
+    for district in request.district:
+        payload = request.dict()
+        payload['district'] = [district]
+        
+        response = requests.post(url, json=payload)
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail=f"Failed to fetch data for district {district}")
+        
+        data = response.json()
+        
+        # Process data to separate date and month into separate objects
+        for entry in data['data']:
+            date_parts = entry.pop('date').split('-')
+            entry['date'] = Date(
+                day=int(date_parts[2]),
+                month={
+                    'number': int(date_parts[1]),
+                    'name': {
+                        'short': date_parts[1] ,
+                        'full': get_month_name(date_parts[1])
+                    }
+                },
+                year=int(date_parts[0])
+            ).dict()
+        
+        all_data.append({
+            "district": district,
+            "data": data['data']
+        })
+    
+    # Assuming metadata is the same for all requests; take it from the last response
+    return DataResponse(metadata=data['metadata'], data=all_data)
+
+
+
+
+
+
+
+
         
 
 
