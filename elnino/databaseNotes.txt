@@ -1,0 +1,4 @@
+Open the PostgreSQL interactive terminal by typing
+
+
+

@@ -1,0 +1,86 @@
+
+public.rainfall_data
+(
+    id integer NOT NULL DEFAULT nextval('rainfall_data_id_seq'::regclass),
+    date timestamp without time zone,
+    longitude double precision,
+    latitude double precision,
+    rainfall double precision,
+    CONSTRAINT rainfall_data_pkey PRIMARY KEY (id)
+)
+
+
+
+-- Table: public.rainfall_annual_data
+
+-- DROP TABLE IF EXISTS public.rainfall_annual_data;
+
+CREATE TABLE IF NOT EXISTS public.rainfall_annual_data
+(
+    year bigint,
+    country text COLLATE pg_catalog."default",
+    region_name text COLLATE pg_catalog."default",
+    avg_rainfall double precision,
+    avg_temperature bigint,
+    quality_control_flags text COLLATE pg_catalog."default",
+    data_source text COLLATE pg_catalog."default",
+    comments text COLLATE pg_catalog."default"
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.rainfall_annual_data
+    OWNER to postgres;
+
+
+-- Table: public.rainfall_daily_data
+
+-- DROP TABLE IF EXISTS public.rainfall_daily_data;
+
+CREATE TABLE IF NOT EXISTS public.rainfall_daily_data
+(
+    country text COLLATE pg_catalog."default",
+    region_name text COLLATE pg_catalog."default",
+    rain_gauge_type text COLLATE pg_catalog."default",
+    weather_station_id text COLLATE pg_catalog."default",
+    temperature double precision,
+    total_rainfall double precision,
+    wind_speed double precision,
+    humidity double precision,
+    weather_conditions text COLLATE pg_catalog."default",
+    date_time timestamp without time zone,
+    "Duration" text COLLATE pg_catalog."default",
+    comments text COLLATE pg_catalog."default",
+    data_source text COLLATE pg_catalog."default"
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.rainfall_daily_data
+    OWNER to postgres;
+
+
+
+
+
+-- Table: public.rainfall_monthly_data
+
+-- DROP TABLE IF EXISTS public.rainfall_monthly_data;
+
+CREATE TABLE IF NOT EXISTS public.rainfall_monthly_data
+(
+    year bigint,
+    month text COLLATE pg_catalog."default",
+    country text COLLATE pg_catalog."default",
+    region_name text COLLATE pg_catalog."default",
+    avg_rainfall bigint,
+    avg_temperature bigint,
+    quality_control_flags double precision,
+    comments text COLLATE pg_catalog."default",
+    data_source double precision
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.rainfall_monthly_data
+    OWNER to postgres;
