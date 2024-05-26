@@ -10,4 +10,5 @@ requests
 geopy
 openpyxl
 python-multipart
+asyncpg 
 
