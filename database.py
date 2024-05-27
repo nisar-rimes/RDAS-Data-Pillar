@@ -26,6 +26,7 @@ connection_params = {
     "port": "5432"
 }
 
+
 # connection_params = {
 #     "dbname": "RDAS",
 #     "user": "postgres",
