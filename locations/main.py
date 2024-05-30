@@ -9,6 +9,7 @@ import psycopg2
 import http.client
 from codecs import encode
 import json
+import time
 
 
 
@@ -90,91 +91,87 @@ def read_province_by_id(province_id: str = Path(..., description="The ID of the 
 
 
 
+def get_db_connection():
+    return psycopg2.connect(
+                dbname=connection_params["dbname"],
+                user=connection_params["user"],
+                password=connection_params["password"],
+                host=connection_params["host"],
+                port=connection_params["port"]
+
+    )
 
 def authenticate():
     conn = http.client.HTTPSConnection("dataex.rimes.int")
-    dataList = []
     boundary = 'wL36Yn8afVp8Ag7AmP8qZ0SA4n1v9T'
+    
+    body = f"--{boundary}\r\n"
+    body += 'Content-Disposition: form-data; name="username";\r\n\r\nnishanthi@rimes.int\r\n'
+    body += f"--{boundary}\r\n"
+    body += 'Content-Disposition: form-data; name="password";\r\n\r\nNisha@123\r\n'
+    body += f"--{boundary}--\r\n"
 
-    dataList.append(encode('--' + boundary))
-    dataList.append(encode('Content-Disposition: form-data; name=username;'))
-    dataList.append(encode('Content-Type: text/plain'))
-    dataList.append(encode(''))
-    dataList.append(encode("nishanthi@rimes.int"))
-
-    dataList.append(encode('--' + boundary))
-    dataList.append(encode('Content-Disposition: form-data; name=password;'))
-    dataList.append(encode('Content-Type: text/plain'))
-    dataList.append(encode(''))
-    dataList.append(encode("Nisha@123"))
-
-    dataList.append(encode('--'+boundary+'--'))
-    dataList.append(encode(''))
-
-    body = b'\r\n'.join(dataList)
     headers = {
-       'Content-type': 'multipart/form-data; boundary={}'.format(boundary) 
+        'Content-type': f'multipart/form-data; boundary={boundary}'
     }
 
-    conn.request("POST", "/user_auth/get_token/", body, headers)
+    conn.request("POST", "/user_auth/get_token/", body.encode(), headers)
     res = conn.getresponse()
     data = res.read()
     return data.decode("utf-8")
 
-def get_data(token):
+def get_data(token: str, reducer: str):
     conn = http.client.HTTPSConnection("dataex.rimes.int")
     payload = json.dumps({
-      "asset_identifier": "e18fc866-d139-4043-88ba-21847f6dfc26",
-      "unique_field": "tehsil_id",
-      "reducer": "tmax_daily_tmax_region"
+        "asset_identifier": "e18fc866-d139-4043-88ba-21847f6dfc26",
+        "unique_field": "tehsil_id",
+        "reducer": reducer
     })
     headers = {
-      'Authorization': token,
-      'Content-Type': 'application/json'
+        'Authorization': token,
+        'Content-Type': 'application/json'
     }
     conn.request("POST", "/forecast_anls/get_ecmwf_hres_region_data/", payload, headers)
     res = conn.getresponse()
     data = res.read()
     return data.decode("utf-8")
 
-def insert_data_to_db(tehsil_id, date, tmax):
+def execute_db_query(query: str, params: tuple):
     try:
-        conn = psycopg2.connect(
-                dbname=connection_params["dbname"],
-                user=connection_params["user"],
-                password=connection_params["password"],
-                host=connection_params["host"],
-                port=connection_params["port"]
-                )
+        conn = get_db_connection()
         cursor = conn.cursor()
-        insert_query = """
-        INSERT INTO public.temp_data (tehsil_id, tmax, date)
-        VALUES (%s, %s, %s)
-         """
-
-
-        cursor.execute(insert_query, (tehsil_id ,tmax, date))
+        cursor.execute(query, params)
         conn.commit()
         cursor.close()
         conn.close()
-        print(f"Inserted/Updated data: tehsil_id={tehsil_id}, date={date}, tmax={tmax}")
     except Exception as error:
-        print(f"Error inserting data: {error}")
+        print(f"Database error: {error}")
         raise
 
-@router.get("/dataex/fetch_and_store_data/")
-def fetch_and_store_data():
-    # Step 1: Authenticate and get the token
-    auth_response = authenticate()
+def insert_data_to_db(tehsil_id: str, date: str, tmax: float):
+    # Insert or update based on existence
+    query = """
+        INSERT INTO public.temp_data (tehsil_id, tmax, date)
+        VALUES (%s, %s, %s)
+    """
+    execute_db_query(query, (tehsil_id, tmax, date))
+    print(f"Inserted/Updated data: tehsil_id={tehsil_id}, date={date}, tmax={tmax}")
 
-    # Extract token from the response (this part might need adjustment based on actual response format)
+def update_data_to_db(tehsil_id: str, date: str, tmin: float):
+    query = """
+        UPDATE public.temp_data
+        SET tmin = %s
+        WHERE tehsil_id = %s AND date = %s
+    """
+    execute_db_query(query, (tmin, tehsil_id, date))
+    print(f"Updated data: tehsil_id={tehsil_id}, date={date}, tmin={tmin}")
+
+def process_data(auth_response: str, reducer: str, update: bool = False):
     token = json.loads(auth_response).get('token')
-
     if not token:
         raise HTTPException(status_code=500, detail="Failed to authenticate, no token received.")
-
-    # Step 2: Use the token to get the data
-    data_response = get_data(token)
+    
+    data_response = get_data(token, reducer)
     data_dict = json.loads(data_response)
 
     if 'data' not in data_dict:
@@ -182,71 +179,28 @@ def fetch_and_store_data():
 
     r_data = data_dict['data'].get('r_data', {})
     
-    # Iterate over the keys in r_data (since the key is dynamic)
     for key in r_data:
         if 'time' in r_data[key] and 'value' in r_data[key]:
-            # Iterate over the time and value fields together
             for time_period, value in zip(r_data[key]['time'], r_data[key]['value']):
-                # Extract the date from the 'time' field and the corresponding value
                 date = time_period[0][:10]
-                tmax = value
                 tehsil_id = key
-
-                # Insert data into the database
-                insert_data_to_db(tehsil_id, date, tmax)
+                if update:
+                    update_data_to_db(tehsil_id, date, value)
+                else:
+                    insert_data_to_db(tehsil_id, date, value)
         else:
             raise HTTPException(status_code=500, detail=f"No 'time' or 'value' field found for key: {key}")
 
-    return {"status": "success", "message": "Data fetched and stored successfully ."}
-
-
-
-
-
-
-
-
-
-
+@router.get("/dataex/fetch_and_store_data/")
+def fetch_and_store_data():
+    start_time = time.time()  # Get current time before execution
+    auth_response = authenticate()
+    process_data(auth_response, 'tmax_daily_tmax_region')
+    process_data(auth_response, 'tmin_daily_tmin_region', update=True)
     
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-
-
-
-
-
-    
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-        
-
-
-
+    end_time = time.time()  
+    total_time = end_time - start_time 
+    return {"status": "success", "message": f"Data fetched and stored successfully. Total time taken: {total_time} seconds."}
 
 
 
