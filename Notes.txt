@@ -25,6 +25,12 @@ uvicorn main:app --reload --port 8000
 conda install netcdf4
 environment location: C:\Users\pc\miniconda3
 
+cd C:\RDAS-Data-Pillar
+.\env\Scripts\activate
+uvicorn main:app --reload
+
+
+
 
 
 
