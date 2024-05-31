@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import  Optional
 
 class Province(BaseModel):
     province_id: str
@@ -19,3 +20,9 @@ class Tehsil(BaseModel):
     tehsil: str
     region_type: str
     region: str
+
+class TempData(BaseModel):
+    tehsil_id: str
+    tmax: float
+    tmin: Optional[float]
+    date: str

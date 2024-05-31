@@ -10,6 +10,7 @@ import http.client
 from codecs import encode
 import json
 import time
+from psycopg2.extras import RealDictCursor
 
 
 
@@ -148,6 +149,9 @@ def execute_db_query(query: str, params: tuple):
         print(f"Database error: {error}")
         raise
 
+    
+
+
 def insert_data_to_db(tehsil_id: str, date: str, tmax: float):
     # Insert or update based on existence
     query = """
@@ -164,7 +168,7 @@ def update_data_to_db(tehsil_id: str, date: str, tmin: float):
         WHERE tehsil_id = %s AND date = %s
     """
     execute_db_query(query, (tmin, tehsil_id, date))
-    print(f"Updated data: tehsil_id={tehsil_id}, date={date}, tmin={tmin}")
+    # print(f"Updated data: tehsil_id={tehsil_id}, date={date}, tmin={tmin}")
 
 def process_data(auth_response: str, reducer: str, update: bool = False):
     token = json.loads(auth_response).get('token')
@@ -201,6 +205,43 @@ def fetch_and_store_data():
     end_time = time.time()  
     total_time = end_time - start_time 
     return {"status": "success", "message": f"Data fetched and stored successfully. Total time taken: {total_time} seconds."}
+
+
+
+def execute_query1(query, params=None):
+    conn = connect_to_db()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute(query, params)
+    result = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return result 
+
+ 
+@router.get("/dataex/get_data_temp_data", response_model=List[schemas.TempData])
+def get_data_temp_data(tehsil_id: Optional[str] = None):
+    try:
+        if tehsil_id:
+            query = "SELECT tehsil_id, tmax, tmin, date FROM public.temp_data WHERE tehsil_id = %s"
+            params = (tehsil_id,)
+        else:
+            query = "SELECT tehsil_id, tmax, tmin, date FROM public.temp_data"
+            params = None
+        
+        rows = execute_query1(query, params)
+        data = [
+            schemas.TempData(
+                tehsil_id=row['tehsil_id'],  
+                tmax=row['tmax'],
+                tmin=row['tmin'] if row['tmin'] is not None else None,
+                date=row['date'].isoformat() if 'date' in row else None 
+            ) for row in rows
+        ]
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 
 
