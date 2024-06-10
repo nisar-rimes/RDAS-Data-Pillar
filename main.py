@@ -5,6 +5,7 @@ from quiz   import models as quiz_model
 from rainfall   import main as rainfall_main
 from elnino import main as elnino_main
 from locations import main as locations_main
+from crops import main as crops_main
 # import quiz.main  
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -33,3 +34,4 @@ app.include_router(quiz_main.router)
 app.include_router(rainfall_main.router)
 app.include_router(elnino_main.router)
 app.include_router(locations_main.router)
+app.include_router(crops_main.router)
