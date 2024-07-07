@@ -106,12 +106,12 @@ async def get_data(request: DataRequest):
 
 
 
-@router.get("/example")
-async def example_endpoint():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-        # Construct the file path
-    file_path = os.path.join(current_dir, 'elnano_data.xlsx')
-    return {"message": file_path}
+# @router.get("/example")
+# async def example_endpoint():
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
+#         # Construct the file path
+#     file_path = os.path.join(current_dir, 'elnano_data.xlsx')
+#     return {"message": file_path}
   
   
 

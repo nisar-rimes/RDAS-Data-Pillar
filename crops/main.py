@@ -15,10 +15,6 @@ db_dependency = Depends(get_db)
 
 router = APIRouter()
 
-
-
-
-
 @router.get("/crops", response_model=List[schemas.Crop])
 def get_crops(crop_id: Optional[int] = None):
     if crop_id:
