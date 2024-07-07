@@ -21,29 +21,32 @@ router = APIRouter()
 
 
 @router.get("/crop_production", response_model=List[schemas.CropProduction])
-def get_crop_production(crop_production_id: Optional[int] = None, district_id: Optional[int] = None, province_id: Optional[str] = None):
+def get_crop_production(
+    district_id: Optional[int] = None,
+    province_id: Optional[str] = None,
+    crop_id: Optional[int] = None
+):
     query = """
     SELECT crop_production_id, crop_id, district_id, crop_area, crop_production, crop_yield, 
            crop_production_period, province_id, province 
-    FROM public.crop_production
+    FROM public.crop_production 
     """
+    filters = []
     params = []
-    conditions = []
 
-    if crop_production_id:
-        conditions.append("crop_production_id = %s")
-        params.append(crop_production_id)
-    
     if district_id:
-        conditions.append("district_id = %s")
+        filters.append("district_id = %s")
         params.append(district_id)
-    
     if province_id:
-        conditions.append("province_id = %s")
+        filters.append("province_id = %s")
         params.append(province_id)
+    if crop_id:
+        filters.append("crop_id = %s")
+        params.append(crop_id)
 
-    if conditions:
-        query += " WHERE " + " AND ".join(conditions)
+    if filters:
+        query += " WHERE " + " AND ".join(filters)
+    
 
     try:
         results = execute_query(query, tuple(params))
