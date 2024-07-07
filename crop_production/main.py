@@ -55,9 +55,8 @@ def get_crop_production(crop_production_id: Optional[int] = None, district_id: O
             crop_production=row[4],
             crop_yield=row[5],
             crop_production_period=row[6],
-            district_id_=row[7],
-            province_id=row[8],
-            province=row[9]
+            province_id=row[7],
+            province=row[8]
         ) for row in results]
         return crop_production_list
     except Exception as e:
