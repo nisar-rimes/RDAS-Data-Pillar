@@ -71,8 +71,6 @@ def get_tehsil_by_district_id(district_id: str = Path(..., description="The ID o
 
 
 
-
-
 @router.get("/pakistan/provinces/{province_id}", response_model=schemas.Province)
 def read_province_by_id(province_id: str = Path(..., description="The ID of the province to retrieve")):
     sql_query = "SELECT province_id, province FROM public.master_province WHERE province_id = %s"

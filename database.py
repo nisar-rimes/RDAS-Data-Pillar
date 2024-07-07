@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 
 
-URL_DATABASE = "postgresql://postgres:postgres@localhost:5432/RDAS"
-# URL_DATABASE = "postgresql://postgres:postgres@203.156.108.67:14543/RDAS"
+#URL_DATABASE = "postgresql://postgres:postgres@localhost:5432/RDAS"
+URL_DATABASE = "postgresql://postgres:postgres@203.156.108.67:14543/RDAS"
 
 
 engine = create_engine(URL_DATABASE)
@@ -18,22 +18,22 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-connection_params = {
-    "dbname": "RDAS",
-    "user": "postgres",
-    "password": "postgres",
-    "host": "localhost",
-    "port": "5432"
-}
-
-
 # connection_params = {
 #     "dbname": "RDAS",
 #     "user": "postgres",
 #     "password": "postgres",
-#     "host": "203.156.108.67",
-#     "port": "14543"
+#     "host": "localhost",
+#     "port": "5432"
 # }
+
+
+connection_params = {
+    "dbname": "RDAS",
+    "user": "postgres",
+    "password": "postgres",
+    "host": "203.156.108.67",
+    "port": "14543"
+}
 
 
 def get_db():
