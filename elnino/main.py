@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException,Depends, APIRouter,
 import pandas as pd
 from sqlalchemy import create_engine
 from dependencies import get_db
-from database import engine, connection_params
+from database import engine, connect_to_db, execute_query,connection_params
 from . import models, schemas
 from io import BytesIO
 import psycopg2
@@ -14,6 +14,9 @@ from commen_methods import get_month_name
 import json
 import calendar
 import os
+from io import StringIO
+from psycopg2.extras import RealDictCursor
+
 
 db_dependency = Depends(get_db)
 
@@ -106,12 +109,113 @@ async def get_data(request: DataRequest):
 
 
 
-# @router.get("/example")
-# async def example_endpoint():
-#     current_dir = os.path.dirname(os.path.abspath(__file__))
-#         # Construct the file path
-#     file_path = os.path.join(current_dir, 'elnano_data.xlsx')
-#     return {"message": file_path}
+
+
+
+
+
+
+# Model for request validation
+class ElNinoData(BaseModel):
+    SEAS: str
+    YR: int
+    TOTAL: float
+    ANOM: float
+
+    # Model for request validation
+
+
+
+@router.get("/elnano/insert_data")
+
+async def insert_data():
+    # Fetch data from URL
+    url = 'https://origin.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt'
+    response = requests.get(url)
+    response.raise_for_status()  # Raise an exception for HTTP errors
+    
+    # Read data into a DataFrame
+    data = pd.read_csv(StringIO(response.text), delim_whitespace=True, names=['SEAS', 'YR', 'TOTAL', 'ANOM'], skiprows=1)
+    
+    # Establish database connection
+    conn = connect_to_db()
+
+
+  
+    
+     # Establish database connection
+    conn = connect_to_db()
+    cur = conn.cursor()
+
+    # Insert data into table
+    for index, row in data.iterrows():
+        cur.execute("""
+            INSERT INTO el_nino (SEAS, YR, TOTAL, ANOM)
+            VALUES (%s, %s, %s, %s)
+        """, (row['SEAS'], row['YR'], row['TOTAL'], row['ANOM']))
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return {"message": "Data inserted successfully"}
+
+
+
+def fetch_years(query: str) -> List[int]:
+    conn = connect_to_db()
+    cur = conn.cursor()
+    cur.execute(query)
+    years = [row[0] for row in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return years
+
+@router.get("/elnino/{classification}")
+async def get_elnino_years(classification: str):
+    # Define SQL queries for each classification
+    queries = {
+        'Weak': """
+            SELECT DISTINCT YR
+            FROM el_nino
+            WHERE ANOM >= 0.5 AND ANOM < 1.0
+            ORDER BY YR;
+        """,
+        'Moderate': """
+            SELECT DISTINCT YR
+            FROM el_nino
+            WHERE ANOM >= 1.0 AND ANOM < 1.5
+            ORDER BY YR;
+        """,
+        'Strong': """
+            SELECT DISTINCT YR
+            FROM el_nino
+            WHERE ANOM >= 1.5 AND ANOM < 2.0
+            ORDER BY YR;
+        """,
+        'Neutral': """
+            SELECT DISTINCT YR
+            FROM el_nino
+            WHERE ANOM >= -0.4 AND ANOM <= 0.4
+            ORDER BY YR;
+        """
+    }
+
+    # Check if the classification is valid
+    if classification not in queries:
+        raise HTTPException(status_code=400, detail="Invalid classification")
+
+    # Fetch and return years based on the classification
+    query = queries[classification]
+    years = fetch_years(query)
+    
+    # return {f"{classification} El Niño years": years}
+    return {
+            "classification": classification,
+            "total_years": len(years),
+            "Years": years
+        }
+
   
   
 
