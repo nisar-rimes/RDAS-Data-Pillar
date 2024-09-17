@@ -18,16 +18,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-# connection_params = {
-#     "dbname": "RDAS",
-#     "user": "postgres",
-#     "password": "postgres",
-#     "host": "localhost",
-#     "port": "5432"
-# }
-
-# 5432 
-
 connection_params = {
     "dbname": "RDAS",
     "user": "postgres",
@@ -35,6 +25,10 @@ connection_params = {
     "host": "localhost",
     "port": "5432"
 }
+
+
+
+
 
 
 # connection_params = {
