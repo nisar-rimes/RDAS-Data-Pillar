@@ -201,6 +201,8 @@ async def get_elnino_years(classification: str):
         """
     }
 
+    
+
     # Check if the classification is valid
     if classification not in queries:
         raise HTTPException(status_code=400, detail="Invalid classification")
