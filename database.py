@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 
 
-#URL_DATABASE = "postgresql://postgres:postgres@localhost:5432/RDAS"
-URL_DATABASE = "postgresql://postgres:postgres@203.156.108.67:14543/RDAS"
+URL_DATABASE = "postgresql://postgres:postgres@localhost:5432/RDAS"
+#URL_DATABASE = "postgresql://postgres:postgres@203.156.108.67:14543/RDAS"
 
 
 engine = create_engine(URL_DATABASE)
