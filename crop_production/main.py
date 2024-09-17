@@ -6,19 +6,8 @@ from typing import Optional
 from pydantic import BaseModel
 from typing import List
 import pandas as pd
-
-
-
-
-
-
 db_dependency = Depends(get_db)
-
 router = APIRouter()
-
-
-
-
 
 @router.get("/crop_production", response_model=List[schemas.CropProduction])
 def get_crop_production(

@@ -19,14 +19,24 @@ origins = [
     # Add other origins as needed
 ]
 
+# app.add_middleware(
+#     CORSMiddleware,
+#     # allow_origins=origins,
+#     allow_origins=["*"],  # Allow requests from any origin
+#     allow_credentials=True,
+#     allow_methods=["GET", "POST", "PUT", "DELETE"],
+#     allow_headers=["*"],
+# )
+
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=origins,
-    allow_origins=["*"],  # Allow requests from any origin
+    allow_origins=["*"],  # Adjust this list to specify which origins are allowed
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Specify the methods you want to allow, e.g., ["GET", "POST"]
+    allow_headers=["*"],  # Specify the headers you want to allow
 )
+
+
 
 quiz_model.Base.metadata.create_all(bind=engine)
 

@@ -84,3 +84,6 @@ TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.rainfall_monthly_data
     OWNER to postgres;
+
+
+--https://origin.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php
