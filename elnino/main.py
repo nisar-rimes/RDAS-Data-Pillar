@@ -123,6 +123,7 @@ class ElNinoData(BaseModel):
     ANOM: float
 
     # Model for request validation
+    #space 
 
 
 
@@ -201,7 +202,7 @@ async def get_elnino_years(classification: str):
         """
     }
 
-    
+
 
     # Check if the classification is valid
     if classification not in queries:
