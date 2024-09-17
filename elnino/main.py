@@ -178,19 +178,19 @@ async def get_elnino_years(classification: str):
         'Weak': """
             SELECT DISTINCT YR
             FROM el_nino
-            WHERE ANOM >= 0.5 AND ANOM < 1.0
+            WHERE ANOM >= 0.5 AND ANOM < 0.9
             ORDER BY YR;
         """,
         'Moderate': """
             SELECT DISTINCT YR
             FROM el_nino
-            WHERE ANOM >= 1.0 AND ANOM < 1.5
+            WHERE ANOM >= 1.0 AND ANOM < 1.4
             ORDER BY YR;
         """,
         'Strong': """
             SELECT DISTINCT YR
             FROM el_nino
-            WHERE ANOM >= 1.5 AND ANOM < 2.0
+            WHERE ANOM >= 1.5
             ORDER BY YR;
         """,
         'Neutral': """
@@ -208,6 +208,7 @@ async def get_elnino_years(classification: str):
     # Fetch and return years based on the classification
     query = queries[classification]
     years = fetch_years(query)
+    # years=execute_query(query)
     
     # return {f"{classification} El Niño years": years}
     return {
