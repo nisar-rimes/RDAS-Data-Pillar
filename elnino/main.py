@@ -186,9 +186,15 @@ async def get_elnino_years(classification: str):
         """,
         'Moderate': """
             SELECT DISTINCT YR
-            FROM el_nino
-            WHERE ANOM >= 1.0 AND ANOM < 1.4
-            ORDER BY YR;
+                FROM el_nino e1
+                WHERE ANOM >= 1.0 AND ANOM < 1.5
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM el_nino e2
+                    WHERE e2.YR = e1.YR
+                    AND e2.ANOM >= 1.5
+                )
+                ORDER BY YR;
         """,
         'Strong': """
             SELECT DISTINCT YR
