@@ -180,8 +180,14 @@ async def get_elnino_years(classification: str):
     queries = {
         'Weak': """
             SELECT DISTINCT YR
-            FROM el_nino
+            FROM el_nino e1
             WHERE ANOM >= 0.5 AND ANOM < 0.9
+            AND NOT EXISTS (
+                SELECT 1
+                FROM el_nino e2
+                WHERE e2.YR = e1.YR
+                AND (e2.ANOM >= 0.9)
+            )
             ORDER BY YR;
         """,
         'Moderate': """
@@ -204,8 +210,14 @@ async def get_elnino_years(classification: str):
         """,
         'Neutral': """
             SELECT DISTINCT YR
-            FROM el_nino
+            FROM el_nino e1
             WHERE ANOM >= -0.4 AND ANOM <= 0.4
+            AND NOT EXISTS (
+                SELECT 1
+                FROM el_nino e2
+                WHERE e2.YR = e1.YR
+                AND e2.ANOM > 0.4
+            )
             ORDER BY YR;
         """
     }
