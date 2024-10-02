@@ -177,7 +177,7 @@ def fetch_years(query: str) -> List[int]:
 @router.get("/elnino/{classification}")
 async def get_elnino_years(classification: str):
     # Define SQL queries for each classification
-    
+
     queries = {
         'Weak': """
             SELECT DISTINCT YR
@@ -199,14 +199,14 @@ async def get_elnino_years(classification: str):
                     SELECT 1
                     FROM el_nino e2
                     WHERE e2.YR = e1.YR
-                    AND e2.ANOM >= 1.5
+                    AND e2.ANOM > 1.5
                 )
                 ORDER BY YR;
         """,
         'Strong': """
             SELECT DISTINCT YR
             FROM el_nino
-            WHERE ANOM >= 1.5
+            WHERE ANOM > 1.5
             ORDER BY YR;
         """,
         'Neutral': """
