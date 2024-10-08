@@ -133,3 +133,23 @@ async def extract_rainfall(request: RainfallRequest):
                 #"Years": years
             }
 
+# Function to get district names
+def get_district_names():
+    try:
+        # Read the shapefile
+        gdf = gpd.read_file(shapefile)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading shapefile: {str(e)}")
+
+    # Extract district names
+    districts = gdf['NAME_2'].unique()
+    return sorted(districts.tolist())
+
+# API route for getting district names
+@router.get("/districts/india", response_model=list)
+async def districts():
+    district_names = get_district_names()
+    return district_names
+
+
+
