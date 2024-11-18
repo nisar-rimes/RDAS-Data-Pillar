@@ -12,6 +12,8 @@ from datetime import  date, datetime, timedelta
 import imdlib as imd
 import numpy as np
 from shapely.geometry import Point
+import json
+from fastapi import HTTPException
 
 router = APIRouter()
 
@@ -20,18 +22,49 @@ base_path = os.path.dirname(os.path.abspath(__file__))  # Get the directory of t
 path = os.path.join(base_path, "netcdf_files")
 shapefile = os.path.join(base_path, "netcdf_files", "India_districts_gadm.shp")
 
-def fetch_api_data():
-    url = "https://api.rdas.live/data/get/region"
-    payload = {"country": "IND", "level": 2}
-    response = requests.post(url, json=payload)
-    if response.status_code == 200:
-        return response.json()['data']
-    else:
-        raise HTTPException(status_code=response.status_code, detail="Error fetching data from API.")
+# def fetch_api_data():
+#     url = "https://api.rdas.live/data/get/region"
+#     payload = {"country": "IND", "level": 2}
+#     response = requests.post(url, json=payload)
+#     if response.status_code == 200:
+#         return response.json()['data']
+#     else:
+#         raise HTTPException(status_code=response.status_code, detail="Error fetching data from API.")
+    
+
+
+
+
+
+def fetch_api_data(use_file=False):
+
+    file_path = os.path.join(base_path, "api_data_districts_india.json")  # Construct the full path to the JSON file
+
+    if use_file:
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail=f"Data file not found at {file_path}.")
+        
+        try:
+            with open(file_path, "r") as file:
+                data = json.load(file)
+                return data['data']
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=500, detail="Error decoding JSON data from file.")
+    # else:
+    #     # Fetch data from API
+    #     import requests
+    #     url = "https://api.rdas.live/data/get/region"
+    #     payload = {"country": "IND", "level": 2}
+    #     response = requests.post(url, json=payload)
+    #     if response.status_code == 200:
+    #         return response.json()['data']
+    #     else:
+    #         raise HTTPException(status_code=response.status_code, detail="Error fetching data from API.")
+
 
 # Function to get district details by district code
 def get_district_by_code(district_code):
-    api_data = fetch_api_data()
+    api_data = fetch_api_data(use_file=True)
     if api_data:
         for district in api_data:
             if district['code'] == district_code:
@@ -206,7 +239,7 @@ async def extract_temperature(request: TemperatureRequest):
 
     # Fetch district mapping from API
     try:
-        district_mapping = fetch_api_data()
+        district_mapping = fetch_api_data(use_file=True)
     except HTTPException as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
 
