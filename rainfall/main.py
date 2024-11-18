@@ -50,16 +50,16 @@ def fetch_api_data(use_file=False):
                 return data['data']
         except json.JSONDecodeError:
             raise HTTPException(status_code=500, detail="Error decoding JSON data from file.")
-    # else:
-    #     # Fetch data from API
-    #     import requests
-    #     url = "https://api.rdas.live/data/get/region"
-    #     payload = {"country": "IND", "level": 2}
-    #     response = requests.post(url, json=payload)
-    #     if response.status_code == 200:
-    #         return response.json()['data']
-    #     else:
-    #         raise HTTPException(status_code=response.status_code, detail="Error fetching data from API.")
+    else:
+        # Fetch data from API
+        import requests
+        url = "https://api.rdas.live/data/get/region"
+        payload = {"country": "IND", "level": 2}
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            return response.json()['data']
+        else:
+            raise HTTPException(status_code=response.status_code, detail="Error fetching data from API.")
 
 
 # Function to get district details by district code
